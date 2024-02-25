@@ -5,6 +5,8 @@ from package.geometry import Geometry
 
 class Footing():
     
+    footing_list = []
+    
     def __init__(self, title, origin, cob, sideX, sideY, h0, h1, df, pX, pY, path):
        
         self.title = title
@@ -18,6 +20,12 @@ class Footing():
         self.pX = pX
         self.pY = pY
         self.path = path
+
+        Footing.footing_list.append(self)
+
+    def __str__(self):
+        return self.title
+    
 
     def add_isolFooting(self):
 
@@ -54,7 +62,6 @@ class Footing():
                 )
 
         
-
         #Layers Creation
                 
         doc.layers.new(name='STRUCT_FOOTING_0', dxfattribs={'color': 3})
@@ -131,13 +138,20 @@ class Footing():
 
         path = './examples/' + self.path + '.dxf'
         doc.saveas(path)
+
+    def list_footing():
+        for footing in Footing.footing_list:
+            print(footing)
         
         
 #TESTES
 
 #Cria Sapata     title, origin, cob, sideX, sideY, h0,   h1,   df,     pX, pY, path    
 sapata1 = Footing('S1', [1, 1], 0.05 ,0.85, 1.10, 0.25, 0.40, 1.75, 0.14, 0.40, 'S1')
+sapata2 = Footing('S2', [0, 0], 0.05 ,1.2, 1.2, 0.25, 0.40, 1.75, 0.40, 0.40, 'S2')
+
+#Footing.list_footing()
 
 #desenha sapata
-sapata1.add_isolFooting()
+#sapata1.add_isolFooting()
 
