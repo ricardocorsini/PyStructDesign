@@ -62,8 +62,6 @@ class Footing():
         doc.layers.new(name='STRUCT_FOOTING_2', dxfattribs={'color': 3, 'linetype': 'DOTTED'})
         doc.layers.new(name='STRUCT_FOOTING_3', dxfattribs={'color': 5})
 
-        
-
         #Plan
 
         msp.add_text(
@@ -121,10 +119,6 @@ class Footing():
         msp.add_line([self.origin[0] + self.sideX - self.cob, self.origin[1] - 0.1], [self.origin[0] + self.sideX - self.cob, self.origin[1] - 0.1 - flapLength], dxfattribs={'layer': 'STRUCT_FOOTING_3',})
         msp.add_line([self.origin[0] + self.cob, self.origin[1] - 0.1 - flapLength], [self.origin[0] + self.sideX - self.cob, self.origin[1] - 0.1 - flapLength], dxfattribs={'layer': 'STRUCT_FOOTING_3',})
 
-
-
-
-
         #Cut
             
 
@@ -135,13 +129,9 @@ class Footing():
         ).set_placement((self.origin[0] + self.sideX, self.origin[1] + self.sideY + 0.20), align=TextEntityAlignment.LEFT)
         
 
-
-
-
         path = './examples/' + self.path + '.dxf'
         doc.saveas(path)
         
-
         
 #TESTES
 
