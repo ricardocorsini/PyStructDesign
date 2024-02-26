@@ -1,8 +1,8 @@
 import ezdxf
 from ezdxf.tools.standards import linetypes
 from ezdxf.enums import TextEntityAlignment
-from package.geometry import Geometry
 from package.config import Settings
+import numpy as np
 
 class Footing():
     
@@ -80,24 +80,51 @@ class Footing():
 
         
         #Plant insertion
-
-        Geometry.add_retangle(doc, self.origin, self.sideX, self.sideY, dxfattribs={'layer': 'STRUCT_FOOTING_0',})
-        Geometry.add_retangle(doc, [self.origin[0] + ((self.sideX - self.pX) / 2), self.origin[1] + ((self.sideY - self.pY) / 2)], self.pX, self.pY, dxfattribs={'layer': 'STRUCT_FOOTING_0',})
         
+        #Fotting Points
+
+        bottomLeftPoint_plant = np.array(self.origin)
+        bottomRightPoint_plant = bottomLeftPoint_plant + np.array([self.sideX, 0])
+        topRightPoint_plant = bottomRightPoint_plant + np.array([0, self.sideY])
+        topLeftPoint_plant = topRightPoint_plant + np.array([-self.sideX, 0])
+     
+        msp.add_line(bottomLeftPoint_plant, bottomRightPoint_plant, dxfattribs={'layer': 'STRUCT_FOOTING_0',})
+        msp.add_line(bottomRightPoint_plant, topRightPoint_plant, dxfattribs={'layer': 'STRUCT_FOOTING_0',})
+        msp.add_line(topRightPoint_plant, topLeftPoint_plant, dxfattribs={'layer': 'STRUCT_FOOTING_0',})
+        msp.add_line(topLeftPoint_plant, bottomLeftPoint_plant, dxfattribs={'layer': 'STRUCT_FOOTING_0',})
+
+        #Pillar Points
+
+        bottomLeftPoint_plant_pillar = bottomLeftPoint_plant + np.array([(self.sideX / 2) - (self.pX / 2), (self.sideY / 2) - (self.pY / 2)])
+        bottomRightPoint_plant_pillar = bottomLeftPoint_plant_pillar + np.array([self.pX, 0])
+        topRightPoint_plant_pillar = bottomRightPoint_plant_pillar + np.array([0, self.pY])
+        topLeftPoint_plant_pillar = topRightPoint_plant_pillar + np.array([- self.pX, 0])
+
+        msp.add_line(bottomLeftPoint_plant_pillar, bottomRightPoint_plant_pillar, dxfattribs={'layer': 'STRUCT_FOOTING_0',})
+        msp.add_line(bottomRightPoint_plant_pillar, topRightPoint_plant_pillar, dxfattribs={'layer': 'STRUCT_FOOTING_0',})
+        msp.add_line(topRightPoint_plant_pillar, topLeftPoint_plant_pillar, dxfattribs={'layer': 'STRUCT_FOOTING_0',})
+        msp.add_line(topLeftPoint_plant_pillar, bottomLeftPoint_plant_pillar, dxfattribs={'layer': 'STRUCT_FOOTING_0',})
+        
+        #Chamfer
 
         if self.h0 != self.h1:
-            msp.add_line(self.origin, [self.origin[0] + ((self.sideX - self.pX) / 2), self.origin[1] + ((self.sideY - self.pY) / 2)], dxfattribs={'layer': 'STRUCT_FOOTING_0',})
-            msp.add_line([self.origin[0], self.origin[1] + self.sideY], [self.origin[0] + ((self.sideX - self.pX) / 2), self.origin[1] + ((self.sideY - self.pY) / 2) + self.pY], dxfattribs={'layer': 'STRUCT_FOOTING_0',})
-            msp.add_line([self.origin[0] + self.sideX, self.origin[0]], [self.origin[0] + ((self.sideX - self.pX) / 2) + self.pX, self.origin[1] + ((self.sideY - self.pY) / 2)], dxfattribs={'layer': 'STRUCT_FOOTING_0',})
-            msp.add_line([self.origin[0] + self.sideX, self.origin[1] + self.sideY], [self.origin[0] + ((self.sideX - self.pX) / 2) + self.pX, self.origin[1] + ((self.sideY - self.pY) / 2) + self.pY], dxfattribs={'layer': 'STRUCT_FOOTING_0',})
+            msp.add_line(bottomLeftPoint_plant, bottomLeftPoint_plant_pillar, dxfattribs={'layer': 'STRUCT_FOOTING_0',})
+            msp.add_line(bottomRightPoint_plant, bottomRightPoint_plant_pillar, dxfattribs={'layer': 'STRUCT_FOOTING_0',})
+            msp.add_line(topRightPoint_plant, topRightPoint_plant_pillar, dxfattribs={'layer': 'STRUCT_FOOTING_0',})
+            msp.add_line(topLeftPoint_plant, topLeftPoint_plant_pillar, dxfattribs={'layer': 'STRUCT_FOOTING_0',})
 
         #reinforcement in plan
             
         flapLength = self.h0 - 2 * self.cob
+
+        pointOneBottom_reinforced_90 = bottomRightPoint_plant + np.array([0.1, self.cob])
+        pointTwoBottom_reinforced_90 = pointOneBottom_reinforced_90 + np.array([flapLength, 0])
+        pointOneTop_reinforced_90 = pointOneBottom_reinforced_90 + np.array([0, self.sideY - 2 * self.cob])
+        pointTwoTop_reinforced_90 = pointOneTop_reinforced_90 + np.array([flapLength, 0])
         
-        msp.add_line([self.origin[0] + self.sideX + 0.1, self.origin[1] + self.cob], [self.origin[0] + self.sideX + 0.1 + flapLength, self.origin[1] + self.cob], dxfattribs={'layer': 'STRUCT_FOOTING_3',})
-        msp.add_line([self.origin[0] + self.sideX + 0.1, self.origin[1] + self.sideY - self.cob], [self.origin[0] + self.sideX + 0.1 + flapLength, self.origin[1] + self.sideY - self.cob], dxfattribs={'layer': 'STRUCT_FOOTING_3',})
-        msp.add_line([self.origin[0] + self.sideX + 0.1 + flapLength, self.origin[1] + self.cob], [self.origin[0] + self.sideX + 0.1 + flapLength, self.origin[1] + self.sideY - self.cob], dxfattribs={'layer': 'STRUCT_FOOTING_3',})   
+        msp.add_line(pointOneBottom_reinforced_90, pointTwoBottom_reinforced_90, dxfattribs={'layer': 'STRUCT_FOOTING_3',})
+        msp.add_line(pointTwoBottom_reinforced_90, pointTwoTop_reinforced_90, dxfattribs={'layer': 'STRUCT_FOOTING_3',})
+        msp.add_line(pointTwoTop_reinforced_90, pointOneTop_reinforced_90, dxfattribs={'layer': 'STRUCT_FOOTING_3',})   
 
         msp.add_text(
                     '11 N8 %%C 8.0 c/11 C=149',
@@ -112,9 +139,14 @@ class Footing():
         ).set_placement((self.origin[0] + self.sideX + 0.1 + flapLength -0.015, self.origin[1] + self.sideY / 2), align=TextEntityAlignment.BOTTOM_CENTER)
 
 
-        msp.add_line([self.origin[0] + self.cob, self.origin[1] - 0.1], [self.origin[0] + self.cob, self.origin[1] - 0.1 - flapLength], dxfattribs={'layer': 'STRUCT_FOOTING_3',})
-        msp.add_line([self.origin[0] + self.sideX - self.cob, self.origin[1] - 0.1], [self.origin[0] + self.sideX - self.cob, self.origin[1] - 0.1 - flapLength], dxfattribs={'layer': 'STRUCT_FOOTING_3',})
-        msp.add_line([self.origin[0] + self.cob, self.origin[1] - 0.1 - flapLength], [self.origin[0] + self.sideX - self.cob, self.origin[1] - 0.1 - flapLength], dxfattribs={'layer': 'STRUCT_FOOTING_3',})
+        pointOneTop_reinforced_0 = bottomLeftPoint_plant + np.array([self.cob, - 0.1])
+        pointTwoTop_reinforced_0 = pointOneTop_reinforced_0 + np.array([self.sideX - 2 * self.cob, 0])
+        pointOneBottom_reinforced_0 = pointOneTop_reinforced_0 + np.array([0, - flapLength])
+        pointTwoBottom_reinforced_0 = pointTwoTop_reinforced_0 + np.array([0, - flapLength])
+
+        msp.add_line(pointOneTop_reinforced_0, pointOneBottom_reinforced_0, dxfattribs={'layer': 'STRUCT_FOOTING_3',})
+        msp.add_line(pointTwoTop_reinforced_0, pointTwoBottom_reinforced_0, dxfattribs={'layer': 'STRUCT_FOOTING_3',})
+        msp.add_line(pointOneBottom_reinforced_0, pointTwoBottom_reinforced_0, dxfattribs={'layer': 'STRUCT_FOOTING_3',})
 
 
         #Foundation cut
@@ -123,8 +155,41 @@ class Footing():
                     'CORTE',
                     height=0.06,
                     dxfattribs={"style": "Subtitle_01", 'color': 3}
-        ).set_placement((self.origin[0] + self.sideX, self.origin[1] + self.sideY + 0.20), align=TextEntityAlignment.LEFT)
+        ).set_placement((topRightPoint_plant[0] + 2 * self.h0, topRightPoint_plant[1] + 0.2), align=TextEntityAlignment.LEFT)
         
+        dottedLineTop_one = pointTwoTop_reinforced_90 + np.array([self.h0, self.cob])
+        dottedLineTop_two = dottedLineTop_one + np.array([2 * self.h0 + self.sideX, 0])
+        dottedLineBottom_one = dottedLineTop_one + np.array([0, - self.df])
+        dottedLineBottom_two = dottedLineTop_two + np.array([0, - self.df])
+
+        msp.add_line(dottedLineTop_one, dottedLineTop_two, dxfattribs={'layer': 'STRUCT_FOOTING_2',})
+        msp.add_line(dottedLineBottom_one, dottedLineBottom_two, dxfattribs={'layer': 'STRUCT_FOOTING_2',})
+
+        cutBottomPoint_one = dottedLineBottom_one + np.array([self.h0, 0])
+        cutBottomPoint_two = cutBottomPoint_one + np.array([self.sideX, 0])
+        cutTopPoint_one = cutBottomPoint_one + np.array([0, self.h0])
+        cutTopPoint_two = cutBottomPoint_two + np.array([0, self.h0])
+        
+        cutPillarPoint_one = dottedLineTop_one + np.array([self.h0 + (self.sideX / 2) - (self.pX / 2), 0])
+        cutPillarPoint_two = cutPillarPoint_one + np.array([self.pX, 0]) 
+
+        cutH1Point_one = cutPillarPoint_one + np.array([0, - self.df + self.h1])
+        cutH1Point_two = cutPillarPoint_two + np.array([0, - self.df + self.h1])
+
+        msp.add_line(cutPillarPoint_one, cutPillarPoint_two, dxfattribs={'layer': 'STRUCT_FOOTING_0',})
+        msp.add_line(cutPillarPoint_one, cutH1Point_one, dxfattribs={'layer': 'STRUCT_FOOTING_0',})
+        msp.add_line(cutPillarPoint_two, cutH1Point_two, dxfattribs={'layer': 'STRUCT_FOOTING_0',})
+        msp.add_line(cutH1Point_one, cutTopPoint_one, dxfattribs={'layer': 'STRUCT_FOOTING_0',})
+        msp.add_line(cutH1Point_two, cutTopPoint_two, dxfattribs={'layer': 'STRUCT_FOOTING_0',})
+        msp.add_line(cutTopPoint_two, cutBottomPoint_two, dxfattribs={'layer': 'STRUCT_FOOTING_0',})
+        msp.add_line(cutTopPoint_one, cutBottomPoint_one, dxfattribs={'layer': 'STRUCT_FOOTING_0',})
+        msp.add_line(cutBottomPoint_one, cutBottomPoint_two, dxfattribs={'layer': 'STRUCT_FOOTING_0',})
+
+        #reinforcement in cut
+
+        
+
+
 
         path = './examples/' + self.path + '.dxf'
         doc.saveas(path)
@@ -140,9 +205,9 @@ class Footing():
         
 #TESTES
 
-#Cria Sapata     title, origin, cob, sideX, sideY, h0,   h1,   df,     pX, pY, path    
+#Cria Sapata     title, origin, cob, sideX, sideY, h0,   h1,   df,    pX, pY, path    
 sapata1 = Footing('S1', [1, 1], 0.05 ,0.85, 1.10, 0.25, 0.40, 1.75, 0.14, 0.40, 'S1')
-sapata2 = Footing('S2', [0, 0], 0.05 ,1.2, 1.2, 0.25, 0.40, 1.75, 0.40, 0.40, 'S2')
+sapata2 = Footing('S2', [0, 0], 0.05 ,1.8, 2.20,  0.25, 0.45, 1.50, 0.30, 0.60, 'S2')
 
 #Footing.list_footing()
 
