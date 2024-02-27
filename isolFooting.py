@@ -221,16 +221,47 @@ class Footing():
     def list_footing():
         for footing in Footing.footing_list:
             print(footing)
-        
-        
-#TESTES
 
-#Cria Sapata     title, origin, cob, sideX, sideY, h0,   h1,   df,    pX, pY, path    
+    def volume(self):
+
+        if self.h0 == self.h1:
+            bottomVol = self.sideX * self.sideY * self.h0
+            pillarVol = (self.df - self.h0) * self.pX * self.pY
+            totalVol = bottomVol + pillarVol
+        else:
+            straightPartVol = self.sideX * self.sideY * self.h0 #Straigth Part Volume
+
+            sB = self.sideX * self.sideY #larger base area
+            sb = self.pX * self.pY #smaller base area
+            heightPyrTrunk = self.h1 - self.h0 #height of pyramid trunk
+            pyramidTrunk = (heightPyrTrunk / 3) * (sB + ((sB * sb) ** (1 / 2)) + sb)
+            
+            bottomVol = straightPartVol + pyramidTrunk
+            pillarVol = (self.df - self.h1) * self.pX * self.pY
+            totalVol = bottomVol + pillarVol
+
+        return [round(bottomVol, 2), round(pillarVol, 2), round(totalVol, 2)]
+    
+    def formwork(self):
+
+        return
+        
+
+        
+#Testes e métodos desenvolvidos - roteiro para README.MD futuro.
+
+#Cria Sapata      title, origin, cob, sideX, sideY, h0,   h1,   df,    pX, pY, path    
+#Medidas em metro. 
 sapata1 = Footing('S1', [1, 1], 0.05 ,0.85, 1.10, 0.25, 0.40, 1.75, 0.14, 0.40, 'S1')
 sapata2 = Footing('S2', [0, 0], 0.05 ,1.8, 2.20,  0.25, 0.45, 1.50, 0.30, 0.60, 'S2')
+sapata3 = Footing('S3', [0, 0], 0.045 ,2.15, 2.30,  0.30, 0.60, 2.20, 0.35, 0.50, 'S3')
 
-#Footing.list_footing()
+#Lista todas as sapatas já criadas.
+#Footing.list_footing() 
 
-#desenha sapata
-sapata2.add_isolFooting()
+#Desenha a sapata
+#sapata2.add_isolFooting() 
+
+#Fornece uma lista [Volume da parte inferior (reta ou com chanfro), volume da parte do pilar, volume total]
+print(sapata3.volume())
 
