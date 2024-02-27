@@ -113,6 +113,7 @@ class Footing():
             msp.add_line(topRightPoint_plant, topRightPoint_plant_pillar, dxfattribs={'layer': 'STRUCT_FOOTING_0',})
             msp.add_line(topLeftPoint_plant, topLeftPoint_plant_pillar, dxfattribs={'layer': 'STRUCT_FOOTING_0',})
 
+
         #reinforcement in plan
             
         flapLength = self.h0 - 2 * self.cob
@@ -147,6 +148,18 @@ class Footing():
         msp.add_line(pointOneTop_reinforced_0, pointOneBottom_reinforced_0, dxfattribs={'layer': 'STRUCT_FOOTING_3',})
         msp.add_line(pointTwoTop_reinforced_0, pointTwoBottom_reinforced_0, dxfattribs={'layer': 'STRUCT_FOOTING_3',})
         msp.add_line(pointOneBottom_reinforced_0, pointTwoBottom_reinforced_0, dxfattribs={'layer': 'STRUCT_FOOTING_3',})
+
+        msp.add_text(
+                    '11 N8 %%C 8.0 c/11 C=149',
+                    height=0.05,
+                    dxfattribs={"style": "Subtitle_01", 'color': 3, 'rotation': 0}
+        ).set_placement((bottomLeftPoint_plant[0] + (self.sideX / 2), pointOneBottom_reinforced_0[1] - 0.025), align=TextEntityAlignment.TOP_CENTER)
+
+        msp.add_text(
+                    '234',
+                    height=0.05,
+                    dxfattribs={"style": "Subtitle_01", 'color': 3, 'rotation': 0}
+        ).set_placement((bottomLeftPoint_plant[0] + (self.sideX / 2), pointOneBottom_reinforced_0[1] + 0.015), align=TextEntityAlignment.BOTTOM_CENTER)
 
 
         #Foundation cut
@@ -187,7 +200,14 @@ class Footing():
 
         #reinforcement in cut
 
-        
+        pointOneTop_reinforced_cut = cutBottomPoint_one + np.array([self.cob, self.cob + flapLength])
+        pointTwoTop_reinforced_cut = pointOneTop_reinforced_cut + np.array([self.sideX - 2 * self.cob, 0])
+        pointOneBottom_reinforced_cut = pointOneTop_reinforced_cut + np.array([0, - flapLength])
+        pointTwoBottom_reinforced_cut = pointTwoTop_reinforced_cut + np.array([0, - flapLength])
+
+        msp.add_line(pointOneTop_reinforced_cut, pointOneBottom_reinforced_cut, dxfattribs={'layer': 'STRUCT_FOOTING_3',})
+        msp.add_line(pointTwoTop_reinforced_cut, pointTwoBottom_reinforced_cut, dxfattribs={'layer': 'STRUCT_FOOTING_3',})
+        msp.add_line(pointOneBottom_reinforced_cut, pointTwoBottom_reinforced_cut, dxfattribs={'layer': 'STRUCT_FOOTING_3',})
 
 
 
