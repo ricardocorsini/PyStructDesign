@@ -244,7 +244,9 @@ class Footing():
     
     def formwork(self):
 
-        return
+        side = 2 * (self.sideX * self.h0) + 2 * (self.sideY * self.h0)
+
+        return side
         
 
         
@@ -264,4 +266,7 @@ sapata3 = Footing('S3', [0, 0], 0.045 ,2.15, 2.30,  0.30, 0.60, 2.20, 0.35, 0.50
 
 #Fornece uma lista [Volume da parte inferior (reta ou com chanfro), volume da parte do pilar, volume total]
 print(sapata3.volume())
+
+#Fornece o valor das fôrmas por m2. As fôrmas contabilizam somente a parte lateral. 
+print(sapata3.formwork())
 
