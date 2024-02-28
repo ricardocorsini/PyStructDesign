@@ -3,12 +3,13 @@ from ezdxf.tools.standards import linetypes
 from ezdxf.enums import TextEntityAlignment
 from package.config import Settings
 import numpy as np
+from math import ceil
 
 class Footing():
     
     footing_list = []
     
-    def __init__(self, title, origin, cob, sideX, sideY, h0, h1, df, pX, pY, path):
+    def __init__(self, title, origin, cob, sideX, sideY, h0, h1, df, pX, pY, reinforcement_x, reinforcement_y):
        
         self.title = title
         self.origin = origin
@@ -20,15 +21,51 @@ class Footing():
         self.df = df
         self.pX = pX
         self.pY = pY
-        self.path = path
-
+        self.reinforcement_x = reinforcement_x #[diameter, spacing]
+        self.reinforcement_y = reinforcement_y #[diameter, spacing]
+        
         Footing.footing_list.append(self)
 
     def __str__(self):
         return self.title
     
+    def steel_table(self):
 
-    def add_isolFooting(self):
+        #Horizontal
+        if (self.sideY * 100) % self.reinforcement_x[1] == 0:
+            quantBars_x = (self.sideY * 100) / self.reinforcement_x[1]
+        else:
+            quantBars_x = ceil((self.sideY * 100) / self.reinforcement_x[1])
+        
+        middleLength_x = self.sideX - 2 * self.cob
+        flapLength_x = self.h0 - 2 * self.cob
+        lengthTotal_un_x = middleLength_x + 2 * flapLength_x
+
+        #Vertical
+        if (self.sideX * 100) % self.reinforcement_y[1] == 0:
+            quantBars_y = (self.sideX * 100) / self.reinforcement_y[1]
+        else:
+            quantBars_y = ceil((self.sideX * 100) / self.reinforcement_y[1])
+        
+        middleLength_y = self.sideY - 2 * self.cob
+        flapLength_y = self.h0 - 2 * self.cob
+        lengthTotal_un_y = middleLength_y + 2 * flapLength_y
+
+        dictReinforcement = {
+            'quantBars_x': quantBars_x,
+            'middleLength_x': middleLength_x,
+            'flapLength_x': flapLength_x,
+            'lengthTotal_un_x': lengthTotal_un_x,
+            'quantBars_y': quantBars_y,
+            'middleLength_y': middleLength_y,
+            'flapLength_y': flapLength_y,
+            'lengthTotal_un_y': lengthTotal_un_y
+        }
+
+        return dictReinforcement
+    
+
+    def add_isolFooting(self, path):
 
         doc = ezdxf.new()
         msp = doc.modelspace()
@@ -78,7 +115,6 @@ class Footing():
                     dxfattribs={"style": "Subtitle_01", 'color': 3}
         ).set_placement((self.origin[0], self.origin[1] + self.sideY + 0.20), align=TextEntityAlignment.LEFT)
 
-        
         #Plant insertion
         
         #Fotting Points
@@ -116,6 +152,8 @@ class Footing():
 
         #reinforcement in plan
             
+        dict_results = Footing.steel_table(self)
+            
         flapLength = self.h0 - 2 * self.cob
 
         pointOneBottom_reinforced_90 = bottomRightPoint_plant + np.array([0.1, self.cob])
@@ -128,13 +166,13 @@ class Footing():
         msp.add_line(pointTwoTop_reinforced_90, pointOneTop_reinforced_90, dxfattribs={'layer': 'STRUCT_FOOTING_3',})   
 
         msp.add_text(
-                    '11 N8 %%C 8.0 c/11 C=149',
+                    f"{dict_results['quantBars_y']} N2 %%C {self.reinforcement_y[0]} c/{self.reinforcement_y[1]} C={ceil(100 * dict_results['lengthTotal_un_y'])}",
                     height=0.05,
                     dxfattribs={"style": "Subtitle_01", 'color': 3, 'rotation': 90}
         ).set_placement((self.origin[0] + self.sideX + 0.1 + flapLength + 0.025, self.origin[1] + self.sideY / 2), align=TextEntityAlignment.TOP_CENTER)
 
         msp.add_text(
-                    '234',
+                    ceil(100 * dict_results['middleLength_y']),
                     height=0.05,
                     dxfattribs={"style": "Subtitle_01", 'color': 3, 'rotation': 90}
         ).set_placement((self.origin[0] + self.sideX + 0.1 + flapLength -0.015, self.origin[1] + self.sideY / 2), align=TextEntityAlignment.BOTTOM_CENTER)
@@ -150,13 +188,13 @@ class Footing():
         msp.add_line(pointOneBottom_reinforced_0, pointTwoBottom_reinforced_0, dxfattribs={'layer': 'STRUCT_FOOTING_3',})
 
         msp.add_text(
-                    '11 N8 %%C 8.0 c/11 C=149',
+                    f"{dict_results['quantBars_x']} N1 %%C {self.reinforcement_x[0]} c/{self.reinforcement_x[1]} C={ceil(100 * dict_results['lengthTotal_un_x'])}",
                     height=0.05,
                     dxfattribs={"style": "Subtitle_01", 'color': 3, 'rotation': 0}
         ).set_placement((bottomLeftPoint_plant[0] + (self.sideX / 2), pointOneBottom_reinforced_0[1] - 0.025), align=TextEntityAlignment.TOP_CENTER)
 
         msp.add_text(
-                    '234',
+                    ceil(100 * dict_results['middleLength_x']),
                     height=0.05,
                     dxfattribs={"style": "Subtitle_01", 'color': 3, 'rotation': 0}
         ).set_placement((bottomLeftPoint_plant[0] + (self.sideX / 2), pointOneBottom_reinforced_0[1] + 0.015), align=TextEntityAlignment.BOTTOM_CENTER)
@@ -210,14 +248,9 @@ class Footing():
         msp.add_line(pointOneBottom_reinforced_cut, pointTwoBottom_reinforced_cut, dxfattribs={'layer': 'STRUCT_FOOTING_3',})
 
 
+        path_save = path + self.title + '.dxf'
+        doc.saveas(path_save)
 
-        path = './examples/' + self.path + '.dxf'
-        doc.saveas(path)
-
-    
-
-
-    
     def list_footing():
         for footing in Footing.footing_list:
             print(footing)
@@ -252,21 +285,40 @@ class Footing():
         
 #Testes e métodos desenvolvidos - roteiro para README.MD futuro.
 
-#Cria Sapata      title, origin, cob, sideX, sideY, h0,   h1,   df,    pX, pY, path    
+#Cria Sapata      
 #Medidas em metro. 
-sapata1 = Footing('S1', [1, 1], 0.05 ,0.85, 1.10, 0.25, 0.40, 1.75, 0.14, 0.40, 'S1')
-sapata2 = Footing('S2', [0, 0], 0.05 ,1.8, 2.20,  0.25, 0.45, 1.50, 0.30, 0.60, 'S2')
-sapata3 = Footing('S3', [0, 0], 0.045 ,2.15, 2.30,  0.30, 0.60, 2.20, 0.35, 0.50, 'S3')
+
+'''
+title
+origin
+cob
+sideX
+sideY
+h0
+h1
+df
+pX
+pY
+reinforcement_horizontal [bit(mm), esp (cm)]
+reinforcement_vertical [bit(mm), esp (cm)]  
+'''
+
+sapata1 = Footing('S1', [1, 1], 0.05 ,0.85, 1.10, 0.25,  0.40,  1.75,  0.14, 0.40, [10.0, 10], [10, 10])
+sapata2 = Footing('S2', [0, 0], 0.05 ,1.8, 2.20,  0.25, 0.45, 1.50, 0.30, 0.60, [10.0, 10], [10, 10])
+sapata3 = Footing('S3', [0, 0], 0.045 ,2.15, 2.30,  0.30, 0.60, 2.20, 0.35, 0.50, [10.0, 10], [10, 10])
 
 #Lista todas as sapatas já criadas.
 #Footing.list_footing() 
 
-#Desenha a sapata
-#sapata2.add_isolFooting() 
+#Desenha a sapata - precisa entrar com o caminho da pasta onde quer salvar
+sapata3.add_isolFooting('./examples/')
 
 #Fornece uma lista [Volume da parte inferior (reta ou com chanfro), volume da parte do pilar, volume total]
-print(sapata3.volume())
+#sapata3.volume()
 
 #Fornece o valor das fôrmas por m2. As fôrmas contabilizam somente a parte lateral. 
-print(sapata3.formwork())
+#sapata3.formwork()
+
+#Fornece os valores para tabela de aço. 
+#sapata3.steel_table()
 
